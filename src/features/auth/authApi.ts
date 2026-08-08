@@ -24,7 +24,7 @@ export const authApi = apiSlice.injectEndpoints({
         method: 'POST',
       }),
     }),
-    forgotPassword: builder.mutation<any, { shopId: string; email: string }>({
+    forgotPassword: builder.mutation<any, { email: string }>({
       query: (payload) => ({
         url: API_ENDPOINTS.FORGOT_PASSWORD,
         method: 'POST',

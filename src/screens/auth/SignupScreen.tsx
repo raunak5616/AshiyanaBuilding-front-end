@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, Alert } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { View, StyleSheet, Text, ScrollView, Alert, Image } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
 import { signupSchema } from '../../features/auth/authValidation';
@@ -16,22 +16,27 @@ import { InputField } from '../../components/inputs/InputField';
 import { PasswordField } from '../../components/inputs/PasswordField';
 import { PrimaryButton } from '../../components/buttons/PrimaryButton';
 import { LoadingOverlay } from '../../components/loaders/LoadingOverlay';
-import { Card } from 'react-native-paper';
+import { Card, SegmentedButtons } from 'react-native-paper';
 
 export const SignupScreen = () => {
   const dispatch = useDispatch();
   const [signup, { isLoading }] = useSignupMutation();
 
-  const { control, handleSubmit } = useForm({
+  const { control, handleSubmit, watch } = useForm({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      shopId: '60b9f15c7c2b5d4e6f8a9b1c', // Pre-filled with our seeded Shop ID
       fullName: '',
       email: '',
       phone: '',
       password: '',
+      customerType: 'individual',
+      businessName: '',
+      gstNumber: '',
+      address: '',
     },
   });
+
+  const customerType = watch('customerType');
 
   const onSubmit = async (data: any) => {
     try {
@@ -52,12 +57,40 @@ export const SignupScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
+        <Image
+          source={require('../../../assets/Aashiyana.jpg')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Register a new customer profile</Text>
 
         <Card style={styles.card}>
           <Card.Content>
-
+            <Controller
+              control={control}
+              name="customerType"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.selectorContainer}>
+                  <Text style={styles.selectorLabel}>Account Purpose</Text>
+                  <SegmentedButtons
+                    value={value}
+                    onValueChange={onChange}
+                    buttons={[
+                      {
+                        value: 'individual',
+                        label: 'Individual Use',
+                      },
+                      {
+                        value: 'business',
+                        label: 'Selling / Reseller',
+                      },
+                    ]}
+                    style={styles.segmentedButtons}
+                  />
+                </View>
+              )}
+            />
 
             <InputField
               name="fullName"
@@ -90,6 +123,34 @@ export const SignupScreen = () => {
               placeholder="At least 6 characters"
             />
 
+            {customerType === 'business' && (
+              <>
+                <InputField
+                  name="businessName"
+                  control={control}
+                  label="Shop Name"
+                  placeholder="e.g. Ashiyana Hardware Store"
+                  autoCapitalize="words"
+                />
+
+                <InputField
+                  name="gstNumber"
+                  control={control}
+                  label="GST Number"
+                  placeholder="e.g. 22AAAAA0000A1Z5"
+                  autoCapitalize="characters"
+                />
+
+                <InputField
+                  name="address"
+                  control={control}
+                  label="Shop Address"
+                  placeholder="e.g. Sector 12, Main Market Road"
+                  autoCapitalize="sentences"
+                />
+              </>
+            )}
+
             <PrimaryButton
               label="Sign Up"
               onPress={handleSubmit(onSubmit)}
@@ -115,6 +176,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  logo: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: SPACING.md,
+  },
   title: {
     ...TYPOGRAPHY.heading,
     color: COLORS.secondary,
@@ -132,6 +199,18 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     elevation: 4,
     marginBottom: SPACING.md,
+  },
+  selectorContainer: {
+    marginBottom: SPACING.md,
+  },
+  selectorLabel: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xs,
+    fontWeight: 'bold',
+  },
+  segmentedButtons: {
+    marginBottom: SPACING.xs,
   },
   signupBtn: {
     marginTop: SPACING.sm,

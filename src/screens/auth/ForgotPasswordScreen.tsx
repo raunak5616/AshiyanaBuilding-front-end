@@ -20,7 +20,6 @@ export const ForgotPasswordScreen = ({ navigation }: any) => {
   const { control, handleSubmit } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      shopId: '60b9f15c7c2b5d4e6f8a9b1c',
       email: '',
     },
   });

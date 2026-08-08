@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCredentials } from '../store/authSlice';
@@ -12,7 +13,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { RootState } from '../store/store';
 import { authApi } from '../features/auth/authApi';
 
+// Screens
+import HomeScreen from '../screens/main/HomeScreen';
+import CategoriesScreen from '../screens/main/CategoriesScreen';
+import SearchScreen from '../screens/main/SearchScreen';
+
 const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
+
+const HomeNavigator = () => (
+  <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+    <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+    <HomeStack.Screen name="Search" component={SearchScreen} />
+  </HomeStack.Navigator>
+);
 
 const PlaceholderScreen = ({ name }: { name: string }) => (
   <View style={styles.center}>
@@ -81,12 +95,16 @@ export const TabNavigator = () => {
         headerTintColor: COLORS.background,
       })}
     >
-      <Tab.Screen name={ROUTES.MAIN.HOME} options={{ title: 'Home' }}>
-        {() => <PlaceholderScreen name="Home" />}
-      </Tab.Screen>
-      <Tab.Screen name={ROUTES.MAIN.CATEGORIES} options={{ title: 'Categories' }}>
-        {() => <PlaceholderScreen name="Categories" />}
-      </Tab.Screen>
+      <Tab.Screen
+        name={ROUTES.MAIN.HOME}
+        component={HomeNavigator}
+        options={{ title: 'Home', headerShown: false }}
+      />
+      <Tab.Screen
+        name={ROUTES.MAIN.CATEGORIES}
+        component={CategoriesScreen}
+        options={{ title: 'Categories' }}
+      />
       <Tab.Screen name={ROUTES.MAIN.WISHLIST} options={{ title: 'Wishlist' }}>
         {() => <PlaceholderScreen name="Wishlist" />}
       </Tab.Screen>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Alert, Image } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
@@ -34,7 +34,12 @@ export const LoginScreen = ({ navigation }: any) => {
 
   const onSubmit = async (data: any) => {
     try {
-      const response = await login(data).unwrap();
+      const isEmail = data.emailOrPhone.includes('@');
+      const loginPayload = {
+        password: data.password,
+        [isEmail ? 'email' : 'phone']: data.emailOrPhone.toLowerCase().trim(),
+      };
+      const response = await login(loginPayload).unwrap();
       const { customer, accessToken } = response.data;
 
       // Save access token securely (the refresh token is handled by the apiSlice set-cookie interceptor)
@@ -56,6 +61,11 @@ export const LoginScreen = ({ navigation }: any) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
+        <Image
+          source={require('../../../assets/Aashiyana.jpg')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.title}>Ashiyana Building</Text>
         <Text style={styles.subtitle}>Log in to your customer account</Text>
 
@@ -133,6 +143,12 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: SPACING.md,
   },
   title: {
     ...TYPOGRAPHY.display,
