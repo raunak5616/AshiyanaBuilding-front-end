@@ -21,6 +21,7 @@ const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
 const CartStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
+const OrdersStack = createNativeStackNavigator();
 
 const HomeNavigator = () => (
   <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -45,39 +46,48 @@ const ProfileNavigator = () => (
   </ProfileStack.Navigator>
 );
 
+const OrdersNavigator = () => (
+  <OrdersStack.Navigator screenOptions={{ headerShown: false }}>
+    <OrdersStack.Screen name="OrdersMain" component={OrdersScreen} />
+    <OrdersStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+  </OrdersStack.Navigator>
+);
+
 // Custom Premium Tab Bar Component
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
     <View style={styles.tabBarWrapper}>
       <View style={styles.tabBar}>
-        {state.routes.map((route: any, index: number) => {
-          const { options } = descriptors[route.key];
-          const label =
-            options.tabBarLabel !== undefined
-              ? options.tabBarLabel
-              : options.title !== undefined
-              ? options.title
-              : route.name;
+        {state.routes
+          .filter((route: any) => route.name !== ROUTES.MAIN.CART)
+          .map((route: any) => {
+            const { options } = descriptors[route.key];
+            const label =
+              options.tabBarLabel !== undefined
+                ? options.tabBarLabel
+                : options.title !== undefined
+                ? options.title
+                : route.name;
 
-          const isFocused = state.index === index;
+            const isFocused = state.routes[state.index].name === route.name;
 
-          const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
+            const onPress = () => {
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
 
-          let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'help-circle';
-          if (route.name === ROUTES.MAIN.HOME) iconName = 'home';
-          else if (route.name === ROUTES.MAIN.CATEGORIES) iconName = 'view-grid';
-          else if (route.name === ROUTES.MAIN.CART) iconName = 'cart';
-          else if (route.name === ROUTES.MAIN.PROFILE) iconName = 'account';
+            let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'help-circle';
+            if (route.name === ROUTES.MAIN.HOME) iconName = 'home';
+            else if (route.name === ROUTES.MAIN.CATEGORIES) iconName = 'view-grid';
+            else if (route.name === ROUTES.MAIN.ORDERS) iconName = 'clipboard-text-outline';
+            else if (route.name === ROUTES.MAIN.PROFILE) iconName = 'account';
 
           return (
             <TouchableOpacity
@@ -134,14 +144,19 @@ export const TabNavigator = () => {
         options={{ title: 'Categories' }}
       />
       <Tab.Screen
-        name={ROUTES.MAIN.CART}
-        component={CartNavigator}
-        options={{ title: 'Cart' }}
+        name={ROUTES.MAIN.ORDERS}
+        component={OrdersNavigator}
+        options={{ title: 'Orders' }}
       />
       <Tab.Screen
         name={ROUTES.MAIN.PROFILE}
         component={ProfileNavigator}
         options={{ title: 'Profile' }}
+      />
+      <Tab.Screen
+        name={ROUTES.MAIN.CART}
+        component={CartNavigator}
+        options={{ title: 'Cart' }}
       />
     </Tab.Navigator>
   );

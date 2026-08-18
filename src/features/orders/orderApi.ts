@@ -32,6 +32,7 @@ export interface Order {
   grandTotal: number;
   shippingAddress: ShippingAddress;
   paymentMethod: 'cash' | 'online';
+  walletAmountUsed?: number;
   paymentStatus: 'pending' | 'paid' | 'failed';
   status: 'pending' | 'approved' | 'dispatched' | 'delivered' | 'cancelled';
   notes: string;
@@ -82,6 +83,7 @@ export const orderApi = apiSlice.injectEndpoints({
         items: { productId: string; quantity: number }[];
         shippingAddress: ShippingAddress;
         paymentMethod: 'cash' | 'online';
+        useWallet: boolean;
         notes?: string;
       }
     >({

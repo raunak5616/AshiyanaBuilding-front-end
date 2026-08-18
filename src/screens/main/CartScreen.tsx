@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { useGetCartQuery, useAddToCartMutation, useRemoveFromCartMutation } from '../../features/cart/cartApi';
@@ -15,6 +15,7 @@ export const CartScreen = ({ navigation }: any) => {
   const { data: cartData, isLoading, error, refetch, isFetching } = useGetCartQuery();
   const [addToCart, { isLoading: isAdding }] = useAddToCartMutation();
   const [removeFromCart, { isLoading: isRemoving }] = useRemoveFromCartMutation();
+  const [includeUnloading, setIncludeUnloading] = useState(false);
 
   const cart = cartData?.data;
   const cartItems = cart?.items || [];
@@ -60,7 +61,8 @@ export const CartScreen = ({ navigation }: any) => {
 
   const subtotal = calculateSubtotal();
   const tax = calculateTax(subtotal);
-  const total = subtotal + tax;
+  const unloadingCharge = 30000; // ₹300 in paise
+  const total = subtotal + tax + (includeUnloading ? unloadingCharge : 0);
 
   const isUpdating = isAdding || isRemoving || isFetching;
 
@@ -165,6 +167,26 @@ export const CartScreen = ({ navigation }: any) => {
         }}
       />
 
+      {/* Unloading Service Toggle Card */}
+      <View style={styles.unloadingCard}>
+        <View style={styles.unloadingInfo}>
+          <MaterialCommunityIcons name="dolly" size={24} color={COLORS.primary} style={{ marginRight: 10 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.unloadingTitle}>Unloading Service</Text>
+            <Text style={styles.unloadingDesc}>Get professional labor to unload materials at site</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[styles.unloadingAddBtn, includeUnloading && styles.unloadingAddBtnActive]}
+          onPress={() => setIncludeUnloading(!includeUnloading)}
+        >
+          <Text style={[styles.unloadingAddBtnText, includeUnloading && styles.unloadingAddBtnTextActive]}>
+            {includeUnloading ? 'Added (+₹300)' : 'Add (₹300)'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Summary Footer */}
       <View style={styles.footer}>
         <View style={styles.summaryRow}>
@@ -175,6 +197,16 @@ export const CartScreen = ({ navigation }: any) => {
           <Text style={styles.summaryLabel}>GST (18%)</Text>
           <ProductPrice priceInPaise={tax} style={styles.summaryValue} />
         </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Handling Charge</Text>
+          <Text style={styles.freeChargeText}>FREE</Text>
+        </View>
+        {includeUnloading && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Unloading Service</Text>
+            <ProductPrice priceInPaise={unloadingCharge} style={styles.summaryValue} />
+          </View>
+        )}
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total Amount</Text>
           <ProductPrice priceInPaise={total} style={styles.totalValue} />
@@ -183,7 +215,7 @@ export const CartScreen = ({ navigation }: any) => {
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.checkoutBtn}
-          onPress={() => navigation.navigate('Checkout')}
+          onPress={() => navigation.navigate('Checkout', { includeUnloading })}
         >
           <Text style={styles.checkoutText}>Proceed to Checkout</Text>
           <MaterialCommunityIcons name="arrow-right" size={20} color={COLORS.background} style={{ marginLeft: 8 }} />
@@ -362,6 +394,64 @@ const styles = StyleSheet.create({
   emptyWrapper: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  unloadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  unloadingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    paddingRight: SPACING.xs,
+  },
+  unloadingTitle: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  unloadingDesc: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  unloadingAddBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
+  },
+  unloadingAddBtnActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  unloadingAddBtnText: {
+    ...TYPOGRAPHY.caption,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  unloadingAddBtnTextActive: {
+    color: COLORS.secondary,
+  },
+  freeChargeText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#22C55E',
   },
 });
 export default CartScreen;

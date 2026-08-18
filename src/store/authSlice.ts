@@ -16,6 +16,7 @@ export interface CustomerUser {
   city?: string;
   state?: string;
   postalCode?: string;
+  walletBalance?: number;
 }
 
 interface AuthState {

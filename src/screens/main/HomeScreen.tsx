@@ -18,6 +18,7 @@ import { COLORS } from '../../theme/colors';
 import { SPACING } from '../../theme/spacing';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { RADIUS } from '../../theme/radius';
+import { ROUTES } from '../../constants/routes';
 import { RootState } from '../../store/store';
 import { ProductCard } from '../../components/products/ProductCard';
 import { ErrorState } from '../../components/common/ErrorState';
@@ -31,6 +32,7 @@ import { useGetCartQuery } from '../../features/cart/cartApi';
 import { useListAddressesQuery } from '../../features/profile/profileApi';
 import { useGetSlidesQuery } from '../../features/slides/slidesApi';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -268,7 +270,8 @@ const ProductSlideshow = ({ products, onProductPress }: { products: Product[]; o
   );
 };
 
-export const HomeScreen = ({ navigation }: any) => {
+export const HomeScreen = ({ navigation: propNavigation }: any) => {
+  const navigation = useNavigation<any>();
   const recentlyViewed = useSelector((state: RootState) => state.recentlyViewed.items);
 
   const [addressModalVisible, setAddressModalVisible] = useState(false);
@@ -387,7 +390,7 @@ export const HomeScreen = ({ navigation }: any) => {
         <View style={styles.headerActions}>
           <TouchableOpacity
             style={styles.headerIconBtn}
-            onPress={() => navigation.navigate('Search')}
+            onPress={() => navigation.navigate(ROUTES.MAIN.HOME, { screen: 'Search' })}
           >
             <MaterialCommunityIcons name="magnify" size={24} color={COLORS.textPrimary} />
           </TouchableOpacity>
@@ -421,15 +424,12 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* 2. PROMO CASHBACK BANNER */}
         <View style={styles.cashbackBanner}>
           <View style={styles.cashbackLeft}>
-            <MaterialCommunityIcons name="truck-delivery" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.cashbackBold}>FREE DELIVERY</Text>
+            <MaterialCommunityIcons name="wallet-giftcard" size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
+            <Text style={styles.cashbackBold}>WALLET BENEFIT</Text>
           </View>
           <Text style={styles.cashbackText}>
-            Additional <Text style={styles.cashbackHighlight}>2% cashback</Text> on purchases above ₹50k
+            Get an additional <Text style={styles.cashbackHighlight}>2% discount</Text> on orders above ₹100 using Wallet
           </Text>
-          <View style={styles.cashbackBadge}>
-            <Text style={styles.cashbackBadgeText}>Valid till 15-Aug</Text>
-          </View>
         </View>
 
         {/* 3. HERO PROMO CARD (Wholesale Prices Now Live) or Dynamic Banner Slider */}
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#991B1B', // Dark red
+    backgroundColor: COLORS.secondary, // Premium Deep Slate Gray/Black
     paddingVertical: 7,
     paddingHorizontal: SPACING.md,
   },

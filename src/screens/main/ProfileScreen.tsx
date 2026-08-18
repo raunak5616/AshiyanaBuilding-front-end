@@ -60,6 +60,8 @@ const addressFormSchema = z.object({
 export const ProfileScreen = ({ navigation }: any) => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { data: profileData } = useGetProfileQuery();
+  const walletBalance = profileData?.data?.walletBalance ?? user?.walletBalance ?? 0;
 
   // API mutations & queries
   const [logout] = useLogoutMutation();
@@ -81,6 +83,7 @@ export const ProfileScreen = ({ navigation }: any) => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [policyModal, setPolicyModal] = useState<{ visible: boolean; type: 'shipping' | 'refund' | 'privacy' | 'terms' | null }>({ visible: false, type: null });
   const [reopenAddressesModal, setReopenAddressesModal] = useState(false);
+  const [showWalletDetailsModal, setShowWalletDetailsModal] = useState(false);
 
   const openPolicyModal = (type: 'shipping' | 'refund' | 'privacy' | 'terms') => {
     setPolicyModal({ visible: true, type });
@@ -526,6 +529,34 @@ export const ProfileScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
+        {/* Wallet Card */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.premiumWalletCard}
+          onPress={() => setShowWalletDetailsModal(true)}
+        >
+          <View style={styles.premiumWalletHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialCommunityIcons name="wallet-membership" size={24} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+              <Text style={styles.premiumWalletTitle}>Aashiyana Wallet</Text>
+            </View>
+            <View style={styles.infoBadge}>
+              <Text style={styles.infoBadgeText}>HOW IT WORKS</Text>
+            </View>
+          </View>
+          <View style={styles.premiumWalletBody}>
+            <Text style={styles.premiumBalanceLabel}>Available Balance</Text>
+            <Text style={styles.premiumBalanceValue}>₹{((walletBalance || 0) / 100).toFixed(2)}</Text>
+            <View style={styles.premiumWalletDivider} />
+            <View style={styles.premiumWalletBenefitRow}>
+              <MaterialCommunityIcons name="brightness-percent" size={16} color={COLORS.primary} style={{ marginRight: 8 }} />
+              <Text style={styles.premiumWalletBenefitText}>
+                Get an instant 2% discount on orders over ₹100 using Wallet
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
         {/* Menu Options List */}
         <View style={styles.menuContainer}>
           {menuItems.map((item) => {
@@ -555,6 +586,82 @@ export const ProfileScreen = ({ navigation }: any) => {
             );
           })}
         </View>
+
+        {/* Wallet Details Modal */}
+        <Modal visible={showWalletDetailsModal} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { maxHeight: '80%' }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Aashiyana Wallet — Info</Text>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => setShowWalletDetailsModal(false)}
+                  style={styles.closeModalHeaderBtn}
+                >
+                  <MaterialCommunityIcons name="close" size={24} color={COLORS.textPrimary} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ marginVertical: SPACING.sm }} showsVerticalScrollIndicator={true}>
+                <View style={styles.walletDetailsContainer}>
+                  
+                  {/* Card 1: What is Wallet */}
+                  <View style={styles.infoBlock}>
+                    <View style={styles.infoBlockHeader}>
+                      <MaterialCommunityIcons name="wallet" size={20} color={COLORS.primary} style={{ marginRight: 8 }} />
+                      <Text style={styles.infoBlockTitle}>What is Aashiyana Wallet?</Text>
+                    </View>
+                    <Text style={styles.infoBlockBody}>
+                      Aashiyana Wallet is your pre-funded credit and cashback account. It allows you to complete material checkouts instantly, secure refund balances, and qualify for exclusive store rewards on every purchase.
+                    </Text>
+                  </View>
+
+                  {/* Card 2: 2% discount */}
+                  <View style={styles.infoBlock}>
+                    <View style={styles.infoBlockHeader}>
+                      <MaterialCommunityIcons name="percent" size={20} color="#22C55E" style={{ marginRight: 8 }} />
+                      <Text style={styles.infoBlockTitle}>Automatic 2% Discount</Text>
+                    </View>
+                    <Text style={styles.infoBlockBody}>
+                      Get an instant 2% discount on your order subtotal when you pay using Aashiyana Wallet. This benefit is automatically applied at checkout to any order exceeding ₹100.
+                    </Text>
+                  </View>
+
+                  {/* Card 3: Cashback Reflection */}
+                  <View style={styles.infoBlock}>
+                    <View style={styles.infoBlockHeader}>
+                      <MaterialCommunityIcons name="clock-outline" size={20} color="#3B82F6" style={{ marginRight: 8 }} />
+                      <Text style={styles.infoBlockTitle}>Instant Cashback Reflection</Text>
+                    </View>
+                    <Text style={styles.infoBlockBody}>
+                      Any promotional cashback or returns will reflect in your Aashiyana Wallet balance instantly after the product status updates to Delivered.
+                    </Text>
+                  </View>
+
+                  {/* Card 4: Wallet Expiry */}
+                  <View style={styles.infoBlock}>
+                    <View style={styles.infoBlockHeader}>
+                      <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#EF4444" style={{ marginRight: 8 }} />
+                      <Text style={styles.infoBlockTitle}>30-Day Balance Expiry</Text>
+                    </View>
+                    <Text style={styles.infoBlockBody}>
+                      Please note that promotional cashback and wallet credit balances are valid for 30 days. Ensure to utilize your balance before it expires.
+                    </Text>
+                  </View>
+
+                </View>
+              </ScrollView>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={styles.walletModalCloseBtn}
+                onPress={() => setShowWalletDetailsModal(false)}
+              >
+                <Text style={styles.walletModalCloseBtnText}>Got It</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Saved Addresses Modal */}
         <Modal visible={showSavedAddressesModal} transparent animationType="slide">
@@ -1715,6 +1822,129 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     marginBottom: SPACING.sm,
     lineHeight: 20,
+  },
+  walletCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  premiumWalletCard: {
+    backgroundColor: COLORS.secondary, // Premium Deep Slate Gray/Black
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary, // Gold Border
+    shadowColor: COLORS.secondary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  premiumWalletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: SPACING.xs,
+    marginBottom: SPACING.xs,
+  },
+  premiumWalletTitle: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: '#FFFFFF', // High contrast white
+  },
+  infoBadge: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)', // transparent gold bg
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 0.8,
+    borderColor: COLORS.primary,
+  },
+  infoBadgeText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  premiumWalletBody: {
+    alignItems: 'flex-start',
+  },
+  premiumBalanceLabel: {
+    ...TYPOGRAPHY.caption,
+    color: 'rgba(255, 255, 255, 0.6)', // muted white
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  premiumBalanceValue: {
+    ...TYPOGRAPHY.h2,
+    fontWeight: 'bold',
+    color: COLORS.primary, // Gold Value
+    marginVertical: 2,
+  },
+  premiumWalletDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: '100%',
+    marginVertical: SPACING.xs,
+  },
+  premiumWalletBenefitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  premiumWalletBenefitText: {
+    ...TYPOGRAPHY.caption,
+    color: '#F8FAFC', // Slate 50 light text
+    fontWeight: '500',
+    flex: 1,
+  },
+  walletDetailsContainer: {
+    paddingBottom: SPACING.md,
+  },
+  infoBlock: {
+    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  infoBlockHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  infoBlockTitle: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+  },
+  infoBlockBody: {
+    ...TYPOGRAPHY.caption,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  walletModalCloseBtn: {
+    width: '100%',
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  walletModalCloseBtnText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: COLORS.secondary,
   },
 });
 export default ProfileScreen;

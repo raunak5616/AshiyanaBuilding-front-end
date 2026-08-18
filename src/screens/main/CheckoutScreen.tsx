@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { InputField } from '../../components/inputs/InputField';
+import { useGetProfileQuery } from '../../features/auth/authApi';
 
 // Validation schema for custom shipping address
 const customAddressSchema = z.object({
@@ -27,9 +28,10 @@ const customAddressSchema = z.object({
   postalCode: z.string().trim().min(1, 'Postal code is required'),
 });
 
-export const CheckoutScreen = ({ navigation }: any) => {
+export const CheckoutScreen = ({ navigation, route }: any) => {
   const { data: cartData } = useGetCartQuery();
   const { data: addressData, isLoading: isAddressesLoading } = useListAddressesQuery();
+  const { data: profileData } = useGetProfileQuery();
   const [createAddress] = useCreateAddressMutation();
   const [placeOrder, { isLoading: isPlacingOrder }] = usePlaceOrderMutation();
   const [syncCart] = useSyncCartMutation();
@@ -37,10 +39,13 @@ export const CheckoutScreen = ({ navigation }: any) => {
   const cart = cartData?.data;
   const cartItems = cart?.items || [];
   const savedAddresses = addressData?.data || [];
+  const walletBalance = profileData?.data?.walletBalance || 0;
 
   // Local state
+  const [includeUnloading, setIncludeUnloading] = useState(route.params?.includeUnloading || false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | 'custom' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online'>('cash');
+  const [useWallet, setUseWallet] = useState(false);
   const [notes, setNotes] = useState('');
   const [saveToProfile, setSaveToProfile] = useState(false);
   const [orderSuccessModal, setOrderSuccessModal] = useState(false);
@@ -79,7 +84,11 @@ export const CheckoutScreen = ({ navigation }: any) => {
   };
   const subtotal = calculateSubtotal();
   const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + tax;
+  const unloadingCharge = 30000; // ₹300 in paise
+  const discount = (useWallet && subtotal > 10000) ? Math.round(subtotal * 0.02) : 0;
+  const totalBeforeWallet = subtotal + tax + (includeUnloading ? unloadingCharge : 0) - discount;
+  const walletDeduction = useWallet ? Math.min(walletBalance, totalBeforeWallet) : 0;
+  const total = totalBeforeWallet - walletDeduction;
 
   const handlePlaceOrderSubmit = async (customAddressData?: any) => {
     try {
@@ -125,6 +134,13 @@ export const CheckoutScreen = ({ navigation }: any) => {
         };
       }
 
+      // Format notes to include charges detail
+      const chargesNotes = [
+        `[Handling Charge: Free]`,
+        includeUnloading ? `[Unloading Service: Yes (₹300)]` : `[Unloading Service: No]`,
+        notes.trim()
+      ].filter(Boolean).join('\n');
+
       // 1. Submit order
       const itemsPayload = cartItems.map((item) => ({
         productId: item.productId.id || item.productId._id,
@@ -135,7 +151,8 @@ export const CheckoutScreen = ({ navigation }: any) => {
         items: itemsPayload,
         shippingAddress,
         paymentMethod,
-        notes: notes.trim() || undefined,
+        useWallet,
+        notes: chargesNotes || undefined,
       }).unwrap();
 
       const orderNumber = response.data.orderNumber;
@@ -229,6 +246,28 @@ export const CheckoutScreen = ({ navigation }: any) => {
               <Text style={styles.receiptFeeLabel}>Estimated GST (18%)</Text>
               <ProductPrice priceInPaise={tax} style={styles.receiptFeeValue} />
             </View>
+            <View style={styles.receiptFeeRow}>
+              <Text style={styles.receiptFeeLabel}>Handling Charge</Text>
+              <Text style={styles.freeFeeText}>FREE</Text>
+            </View>
+            {includeUnloading && (
+              <View style={styles.receiptFeeRow}>
+                <Text style={styles.receiptFeeLabel}>Unloading Service</Text>
+                <ProductPrice priceInPaise={unloadingCharge} style={styles.receiptFeeValue} />
+              </View>
+            )}
+            {discount > 0 && (
+              <View style={styles.receiptFeeRow}>
+                <Text style={styles.discountFeeLabel}>Wallet Discount (2%)</Text>
+                <Text style={styles.discountFeeValue}>-₹{(discount / 100).toFixed(2)}</Text>
+              </View>
+            )}
+            {walletDeduction > 0 && (
+              <View style={styles.receiptFeeRow}>
+                <Text style={styles.discountFeeLabel}>Wallet Applied</Text>
+                <Text style={styles.discountFeeValue}>-₹{(walletDeduction / 100).toFixed(2)}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -334,6 +373,30 @@ export const CheckoutScreen = ({ navigation }: any) => {
           )}
         </View>
 
+        {/* Unloading Service section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <MaterialCommunityIcons name="dolly" size={20} color={COLORS.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.sectionTitle}>Unloading Service Option</Text>
+          </View>
+          
+          <View style={styles.unloadingToggleCard}>
+            <View style={styles.unloadingToggleInfo}>
+              <Text style={styles.unloadingToggleTitle}>Add Unloading Service</Text>
+              <Text style={styles.unloadingToggleDesc}>Have professional helpers unload materials at site.</Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[styles.unloadingToggleBtn, includeUnloading && styles.unloadingToggleBtnActive]}
+              onPress={() => setIncludeUnloading(!includeUnloading)}
+            >
+              <Text style={[styles.unloadingToggleBtnText, includeUnloading && styles.unloadingToggleBtnTextActive]}>
+                {includeUnloading ? 'Added (+₹300)' : 'Add (₹300)'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Payment Method section */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
@@ -342,38 +405,79 @@ export const CheckoutScreen = ({ navigation }: any) => {
           </View>
           
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             style={[
               styles.paymentOption,
-              paymentMethod === 'cash' && styles.paymentOptionActive,
+              useWallet && styles.paymentOptionActive,
+              walletBalance === 0 && styles.paymentOptionDisabled,
             ]}
-            onPress={() => setPaymentMethod('cash')}
+            onPress={() => setUseWallet(!useWallet)}
+            disabled={walletBalance === 0}
           >
-            <View style={[styles.radioOutline, paymentMethod === 'cash' && styles.radioOutlineActive]}>
-              {paymentMethod === 'cash' && <View style={styles.radioDot} />}
+            <View style={[styles.checkboxOutline, useWallet && styles.checkboxOutlineActive, walletBalance === 0 && styles.checkboxOutlineDisabled]}>
+              {useWallet && <MaterialCommunityIcons name="check" size={14} color={COLORS.primary} />}
             </View>
             <View style={styles.paymentTextCol}>
-              <Text style={styles.paymentName}>Cash on Delivery (COD)</Text>
-              <Text style={styles.paymentDesc}>Pay in cash upon materials arrival at site.</Text>
+              <Text style={styles.paymentName}>Apply Aashiyana Wallet Balance</Text>
+              <View style={styles.walletBalanceRow}>
+                <Text style={styles.paymentDesc}>Available Balance: </Text>
+                <ProductPrice priceInPaise={walletBalance} style={styles.walletBalanceText} />
+              </View>
+              {useWallet && walletDeduction > 0 && (
+                <Text style={styles.walletAppliedLabel}>
+                  Applied: -₹{(walletDeduction / 100).toFixed(2)}
+                </Text>
+              )}
+              {useWallet && subtotal > 10000 && (
+                <Text style={styles.walletSuccessText}>🎉 2% Discount Applied!</Text>
+              )}
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.paymentOption,
-              paymentMethod === 'online' && styles.paymentOptionActive,
-            ]}
-            onPress={() => setPaymentMethod('online')}
-          >
-            <View style={[styles.radioOutline, paymentMethod === 'online' && styles.radioOutlineActive]}>
-              {paymentMethod === 'online' && <View style={styles.radioDot} />}
+          {total > 0 ? (
+            <>
+              <Text style={styles.paymentSubTitle}>Pay Remaining Balance (₹{(total / 100).toFixed(2)}) Via:</Text>
+              
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.paymentOption,
+                  paymentMethod === 'cash' && styles.paymentOptionActive,
+                ]}
+                onPress={() => setPaymentMethod('cash')}
+              >
+                <View style={[styles.radioOutline, paymentMethod === 'cash' && styles.radioOutlineActive]}>
+                  {paymentMethod === 'cash' && <View style={styles.radioDot} />}
+                </View>
+                <View style={styles.paymentTextCol}>
+                  <Text style={styles.paymentName}>Cash on Delivery (COD)</Text>
+                  <Text style={styles.paymentDesc}>Pay in cash upon materials arrival at site.</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.paymentOption,
+                  paymentMethod === 'online' && styles.paymentOptionActive,
+                ]}
+                onPress={() => setPaymentMethod('online')}
+              >
+                <View style={[styles.radioOutline, paymentMethod === 'online' && styles.radioOutlineActive]}>
+                  {paymentMethod === 'online' && <View style={styles.radioDot} />}
+                </View>
+                <View style={styles.paymentTextCol}>
+                  <Text style={styles.paymentName}>Online Payment</Text>
+                  <Text style={styles.paymentDesc}>Instant checkout with Credit/Debit cards, UPI or Netbanking.</Text>
+                </View>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.fullyCoveredCard}>
+              <MaterialCommunityIcons name="check-decagram" size={20} color="#22C55E" style={{ marginRight: 8 }} />
+              <Text style={styles.fullyCoveredText}>Fully Covered by Wallet! No additional payment required.</Text>
             </View>
-            <View style={styles.paymentTextCol}>
-              <Text style={styles.paymentName}>Online Payment</Text>
-              <Text style={styles.paymentDesc}>Instant checkout with Credit/Debit cards, UPI or Netbanking.</Text>
-            </View>
-          </TouchableOpacity>
+          )}
         </View>
 
         {/* Order Notes */}
@@ -430,11 +534,23 @@ export const CheckoutScreen = ({ navigation }: any) => {
                 <Text style={styles.ticketValue}>{createdOrderNumber}</Text>
               </View>
               <View style={styles.ticketRow}>
-                <Text style={styles.ticketLabel}>Payment Method</Text>
-                <Text style={styles.ticketValue}>{paymentMethod === 'cash' ? 'Cash on Delivery' : 'Online Payment'}</Text>
+                <Text style={styles.ticketLabel}>Payment Details</Text>
+                <Text style={[styles.ticketValue, { textAlign: 'right' }]}>
+                  {useWallet
+                    ? `Wallet applied: -₹${(walletDeduction / 100).toFixed(2)}${
+                        total > 0
+                          ? `\nRemaining: ₹${(total / 100).toFixed(2)} (${
+                              paymentMethod === 'cash' ? 'COD' : 'Online'
+                            })`
+                          : '\nRemaining: Paid in Full'
+                      }`
+                    : paymentMethod === 'cash'
+                    ? 'Cash on Delivery'
+                    : 'Online Payment'}
+                </Text>
               </View>
               <View style={styles.ticketRow}>
-                <Text style={styles.ticketLabel}>Total Invoiced</Text>
+                <Text style={styles.ticketLabel}>Net Payable Amount</Text>
                 <ProductPrice priceInPaise={total} style={styles.ticketValuePrice} />
               </View>
             </View>
@@ -888,6 +1004,143 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: 'bold',
     color: COLORS.secondary,
+  },
+  unloadingToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  unloadingToggleInfo: {
+    flex: 1,
+    paddingRight: SPACING.xs,
+  },
+  unloadingToggleTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  unloadingToggleDesc: {
+    fontSize: 10,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+    lineHeight: 13,
+  },
+  unloadingToggleBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 11,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
+  },
+  unloadingToggleBtnActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  unloadingToggleBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  unloadingToggleBtnTextActive: {
+    color: COLORS.secondary,
+  },
+  freeFeeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#22C55E',
+  },
+  walletBalanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 2,
+  },
+  walletBalanceText: {
+    fontSize: 10.5,
+    fontWeight: 'bold',
+    color: COLORS.primaryDark,
+  },
+  walletSuccessText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#22C55E',
+    marginTop: 3,
+  },
+  walletErrorText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLORS.error,
+    marginTop: 3,
+  },
+  discountFeeLabel: {
+    fontSize: 11,
+    color: '#22C55E',
+    fontWeight: '600',
+  },
+  discountFeeValue: {
+    fontSize: 11,
+    color: '#22C55E',
+    fontWeight: '700',
+  },
+  checkboxOutline: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: COLORS.textSecondary,
+    marginRight: SPACING.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOutlineActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: 'transparent',
+  },
+  checkboxOutlineDisabled: {
+    borderColor: COLORS.disabled,
+  },
+  paymentOptionDisabled: {
+    opacity: 0.5,
+  },
+  walletAppliedLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLORS.primaryDark,
+    marginTop: 3,
+  },
+  paymentSubTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.xs,
+  },
+  fullyCoveredCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    marginTop: SPACING.sm,
+  },
+  fullyCoveredText: {
+    fontSize: 11,
+    color: '#064E3B',
+    fontWeight: 'bold',
+    flex: 1,
   },
 });
 

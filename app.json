@@ -1,27 +1,21 @@
 {
   "expo": {
-    "name": "Ashiyana-frontend",
-    "slug": "ashiyana-building",
+    "name": "Aashiyana",
+    "slug": "aashiyana-building",
     "version": "1.0.0",
     "jsEngine": "hermes",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Aashiyana.jpg",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.ashiyanabuilding.app",
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/Aashiyana.jpg"
     },
     "plugins": [
       "expo-secure-store",

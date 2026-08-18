@@ -15,6 +15,7 @@ import { COLORS } from '../../theme/colors';
 import { SPACING } from '../../theme/spacing';
 import { TYPOGRAPHY } from '../../theme/typography';
 import { RADIUS } from '../../theme/radius';
+import { ROUTES } from '../../constants/routes';
 import { ErrorState } from '../../components/common/ErrorState';
 import { HorizontalProductCard } from '../../components/products/HorizontalProductCard';
 import { SkeletonProductCard } from '../../components/products/SkeletonProductCard';
@@ -283,7 +284,7 @@ export const CategoriesScreen = ({ route, navigation }: any) => {
         <Text style={styles.topHeaderTitle}>Categories</Text>
         <TouchableOpacity
           style={styles.searchIconBtn}
-          onPress={() => navigation.navigate('Search')}
+          onPress={() => navigation.navigate(ROUTES.MAIN.HOME, { screen: 'Search' })}
         >
           <MaterialCommunityIcons name="magnify" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
