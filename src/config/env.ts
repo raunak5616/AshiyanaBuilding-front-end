@@ -22,7 +22,7 @@ export const ENV = {
   },
 };
 
-// Change this to switch environments
-export const CURRENT_ENV: keyof typeof ENV = 'development';
+// Change this to switch environments (dynamically overridden in EAS builds via EXPO_PUBLIC_ENV)
+export const CURRENT_ENV: keyof typeof ENV = (process.env.EXPO_PUBLIC_ENV as keyof typeof ENV) || 'development';
 
 export const Config = ENV[CURRENT_ENV];
