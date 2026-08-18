@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from '../../constants/apiEndpoints';
 import { CustomerUser } from '../../store/authSlice';
 
 export const authApi = apiSlice.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     login: builder.mutation<{ data: { customer: CustomerUser; accessToken: string } }, any>({
       query: (credentials) => ({

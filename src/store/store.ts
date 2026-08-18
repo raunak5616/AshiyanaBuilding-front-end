@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import settingsReducer from './settingsSlice';
 import recentlyViewedReducer from './recentlyViewedSlice';
-import wishlistReducer from './wishlistSlice';
 import { apiSlice } from '../api/apiSlice';
 
 export const store = configureStore({
@@ -10,7 +9,6 @@ export const store = configureStore({
     auth: authReducer,
     settings: settingsReducer,
     recentlyViewed: recentlyViewedReducer,
-    wishlist: wishlistReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

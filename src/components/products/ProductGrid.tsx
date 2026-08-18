@@ -1,11 +1,13 @@
 import React from 'react';
-import { FlatList, StyleSheet, View, Text, ActivityIndicator } from 'react-native';
+import { FlatList, StyleSheet, View, Text, ActivityIndicator, Dimensions } from 'react-native';
 import { Product } from '../../features/products/productApi';
 import { ProductCard } from './ProductCard';
 import { SkeletonProductCard } from './SkeletonProductCard';
 import { EmptyState } from '../common/EmptyState';
 import { COLORS } from '../../theme/colors';
 import { SPACING } from '../../theme/spacing';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ProductGridProps {
   products: Product[];
@@ -30,8 +32,10 @@ export const ProductGrid = ({
   emptyTitle = 'No Products Found',
   emptySubtitle = 'Try modifying your search or filters.',
   badgeType,
-  numColumns = 2,
+  numColumns,
 }: ProductGridProps) => {
+  const calculatedNumColumns = numColumns || (SCREEN_WIDTH > 600 ? 4 : 2);
+
   if (isLoading && products.length === 0) {
     return (
       <View style={styles.loadingContainer}>
@@ -59,13 +63,14 @@ export const ProductGrid = ({
         <ActivityIndicator size="small" color={COLORS.primary} />
       </View>
     );
-  };
+  }
 
   return (
     <FlatList
+      key={calculatedNumColumns}
       data={products}
-      keyExtractor={(item) => item.id}
-      numColumns={numColumns}
+      keyExtractor={(item) => item.id || item._id}
+      numColumns={calculatedNumColumns}
       columnWrapperStyle={styles.row}
       contentContainerStyle={styles.listContent}
       onRefresh={onRefresh}

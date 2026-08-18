@@ -44,7 +44,7 @@ export const CategoryGrid = ({
   return (
     <FlatList
       data={categories}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.id || item._id}
       numColumns={4}
       columnWrapperStyle={styles.row}
       contentContainerStyle={styles.listContent}

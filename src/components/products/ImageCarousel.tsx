@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Image, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
 import { ProductImage } from '../../features/products/productApi';
 import { COLORS } from '../../theme/colors';
 import { RADIUS } from '../../theme/radius';
@@ -32,24 +32,24 @@ export const ImageCarousel = ({ images, onPressImage }: ImageCarouselProps) => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={images}
-        keyExtractor={(item, index) => String(item.publicId || index)}
+      <ScrollView
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        renderItem={({ item, index }) => (
+      >
+        {images.map((item, index) => (
           <TouchableOpacity
+            key={item.publicId || String(index)}
             activeOpacity={0.9}
             onPress={() => onPressImage(index)}
             style={styles.imageWrapper}
           >
-            <Image source={{ uri: item.url }} style={styles.image} resizeMode="cover" />
+            <Image source={{ uri: item.url }} style={styles.image} resizeMode="contain" />
           </TouchableOpacity>
-        )}
-      />
+        ))}
+      </ScrollView>
 
       {images.length > 1 && (
         <View style={styles.dotContainer}>
@@ -70,19 +70,19 @@ export const ImageCarousel = ({ images, onPressImage }: ImageCarouselProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 250,
+    height: 230,
     backgroundColor: COLORS.surface,
     position: 'relative',
   },
   fallbackContainer: {
-    height: 250,
+    height: 230,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#E5E7EB',
   },
   imageWrapper: {
     width: SCREEN_WIDTH,
-    height: 250,
+    height: 245,
   },
   image: {
     width: '100%',

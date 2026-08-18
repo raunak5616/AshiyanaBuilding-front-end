@@ -16,7 +16,7 @@ export const NoInternet = () => {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',

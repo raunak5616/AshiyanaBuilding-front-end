@@ -33,6 +33,9 @@ const baseQuery = fetchBaseQuery({
       headers.set('Cookie', `customerRefreshToken=${refreshToken}`);
     }
 
+    // 3. Bypass localtunnel warning screen for API requests
+    headers.set('bypass-tunnel-reminder', 'true');
+
     return headers;
   },
 });
@@ -129,5 +132,6 @@ const baseQueryWithReauth: BaseQueryFn<
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
+  tagTypes: ['Cart', 'Order', 'Profile', 'Address', 'Slide'],
   endpoints: () => ({}),
 });

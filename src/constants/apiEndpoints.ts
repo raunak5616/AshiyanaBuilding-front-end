@@ -7,4 +7,10 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD: '/customer-auth/reset-password',
   CHANGE_PASSWORD: '/customer-auth/change-password',
   PROFILE: '/customer',
+  CART: '/customer/cart',
+  CART_ADD: '/customer/cart/add',
+  CART_REMOVE: '/customer/cart/remove',
+  ORDERS: '/customer/orders',
+  ADDRESSES: '/customer/addresses',
+  SLIDES: '/slides',
 } as const;

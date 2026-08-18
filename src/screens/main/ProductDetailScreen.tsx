@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { addProductToRecentlyViewed } from '../../store/recentlyViewedSlice';
 import { useGetProductDetailsFromDetailsQuery } from '../../features/products/productDetailsApi';
+import { useAddToCartMutation } from '../../features/cart/cartApi';
 import { ImageCarousel } from '../../components/products/ImageCarousel';
 import { ImageViewerModal } from '../../components/products/ImageViewerModal';
 import { ProductInfoCard } from '../../components/products/ProductInfoCard';
 import { SpecificationList } from '../../components/products/SpecificationList';
 import { RelatedProducts } from '../../components/products/RelatedProducts';
-import { WishlistButton } from '../../components/common/WishlistButton';
 import { ShareButton } from '../../components/common/ShareButton';
 import { SkeletonProductDetails } from '../../components/products/SkeletonProductDetails';
 import { ErrorState } from '../../components/common/ErrorState';
 import { COLORS } from '../../theme/colors';
 import { SPACING } from '../../theme/spacing';
 import { TYPOGRAPHY } from '../../theme/typography';
+import { RADIUS } from '../../theme/radius';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Product } from '../../features/products/productApi';
 
@@ -24,6 +25,8 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
 
   // Fetch product detail info
   const {
@@ -47,9 +50,20 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     refetch();
   };
 
+  const handleAddToCart = async () => {
+    if (!product) return;
+    try {
+      await addToCart({ productId: product.id || product._id, quantity }).unwrap();
+      Alert.alert('Success', `${product.name} (x${quantity}) added to cart.`);
+    } catch (err) {
+      console.error('Failed to add to cart', err);
+      Alert.alert('Error', 'Could not add item to cart. Please try again.');
+    }
+  };
+
   const handleProductPress = (relatedProduct: Product) => {
     // Navigate to same screen with new product id
-    navigation.push('ProductDetails', { productId: relatedProduct.id });
+    navigation.push('ProductDetails', { productId: relatedProduct.id || relatedProduct._id });
   };
 
   if (isLoading) {
@@ -77,7 +91,6 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
         </Text>
         <View style={styles.headerActions}>
           <ShareButton product={product} style={styles.headerAction} />
-          <WishlistButton productId={product.id} style={styles.headerAction} />
         </View>
       </View>
 
@@ -108,7 +121,7 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
         {/* Related Products Carousel */}
         <RelatedProducts
           categoryId={product.categoryId}
-          currentProductId={product.id}
+          currentProductId={product.id || product._id}
           onProductPress={handleProductPress}
         />
       </ScrollView>
@@ -121,6 +134,43 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
           onClose={() => setModalVisible(false)}
         />
       )}
+
+      {/* Bottom Action Bar */}
+      <View style={styles.bottomBar}>
+        <View style={styles.quantityContainer}>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            style={styles.qtyBtn}
+            onPress={() => setQuantity(Math.max(1, quantity - 1))}
+          >
+            <MaterialCommunityIcons name="minus" size={20} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.qtyValue}>{quantity}</Text>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            style={styles.qtyBtn}
+            onPress={() => setQuantity(quantity + 1)}
+          >
+            <MaterialCommunityIcons name="plus" size={20} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          disabled={isAddingToCart}
+          style={[styles.addToCartBtn, isAddingToCart && styles.disabledBtn]}
+          onPress={handleAddToCart}
+        >
+          {isAddingToCart ? (
+            <ActivityIndicator size="small" color={COLORS.background} />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="cart-plus" size={20} color={COLORS.background} />
+              <Text style={styles.addToCartText}>Add to Cart</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -180,6 +230,52 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: COLORS.textSecondary,
     lineHeight: 20,
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.surface,
+    borderTopWidth: 1,
+    borderColor: COLORS.border,
+    padding: SPACING.md,
+    paddingBottom: Platform.OS === 'ios' ? 24 : SPACING.md,
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.background,
+  },
+  qtyBtn: {
+    padding: 10,
+  },
+  qtyValue: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: COLORS.textPrimary,
+    paddingHorizontal: SPACING.md,
+  },
+  addToCartBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+    marginLeft: SPACING.md,
+  },
+  disabledBtn: {
+    opacity: 0.7,
+  },
+  addToCartText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: 'bold',
+    color: COLORS.background,
+    marginLeft: 8,
   },
 });
 export default ProductDetailScreen;

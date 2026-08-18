@@ -3,10 +3,10 @@ import { Platform } from 'react-native';
 export const SHADOWS = {
   low: Platform.select({
     ios: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.15,
-      shadowRadius: 2,
+      shadowColor: '#0F172A',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
     },
     android: {
       elevation: 2,
@@ -15,10 +15,10 @@ export const SHADOWS = {
   }),
   medium: Platform.select({
     ios: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
+      shadowColor: '#0F172A',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
     },
     android: {
       elevation: 4,
@@ -27,10 +27,10 @@ export const SHADOWS = {
   }),
   high: Platform.select({
     ios: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
+      shadowColor: '#0F172A',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
     },
     android: {
       elevation: 8,

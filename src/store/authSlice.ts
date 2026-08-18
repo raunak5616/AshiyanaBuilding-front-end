@@ -9,6 +9,13 @@ export interface CustomerUser {
   phone: string;
   isActive: boolean;
   createdAt: string;
+  latitude?: number;
+  longitude?: number;
+  landmark?: string;
+  addressLine?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
 }
 
 interface AuthState {

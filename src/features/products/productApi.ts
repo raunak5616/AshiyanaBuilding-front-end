@@ -8,6 +8,7 @@ export interface ProductImage {
 
 export interface Product {
   id: string;
+  _id: string;
   name: string;
   sku: string;
   barcode?: string;
@@ -23,9 +24,11 @@ export interface Product {
 
 export interface Category {
   id: string;
+  _id: string;
   name: string;
   slug: string;
   parentCategoryId: string | null;
+  image?: string;
 }
 
 export interface Brand {
@@ -55,10 +58,19 @@ interface ProductDetailsResponse {
 }
 
 export const productApi = apiSlice.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getProducts: builder.query<
       ProductsResponse,
-      { categoryId?: string; brandId?: string; search?: string; page?: number; limit?: number }
+      {
+        categoryId?: string;
+        brandId?: string;
+        search?: string;
+        page?: number;
+        limit?: number;
+        sortBy?: 'price' | 'name' | 'createdAt';
+        sortOrder?: 'asc' | 'desc';
+      }
     >({
       query: (params) => ({
         url: '/customer/products',

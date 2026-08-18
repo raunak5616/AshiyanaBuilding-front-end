@@ -1,28 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Button } from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearCredentials } from '../store/authSlice';
-import { secureStore } from '../utils/secureStore';
-import { STORAGE_KEYS } from '../constants/storageKeys';
+import { Image, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { COLORS } from '../theme/colors';
 import { ROUTES } from '../constants/routes';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { RootState } from '../store/store';
-import { authApi } from '../features/auth/authApi';
 
 // Screens
 import HomeScreen from '../screens/main/HomeScreen';
 import CategoriesScreen from '../screens/main/CategoriesScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import ProductDetailScreen from '../screens/main/ProductDetailScreen';
-import WishlistScreen from '../screens/main/WishlistScreen';
-import { initializeOfflineWishlist } from '../store/wishlistSlice';
+import CartScreen from '../screens/main/CartScreen';
+import CheckoutScreen from '../screens/main/CheckoutScreen';
+import OrdersScreen from '../screens/main/OrdersScreen';
+import OrderDetailScreen from '../screens/main/OrderDetailScreen';
+import ProfileScreen from '../screens/main/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
+const CartStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
 
 const HomeNavigator = () => (
   <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -32,83 +30,103 @@ const HomeNavigator = () => (
   </HomeStack.Navigator>
 );
 
-const PlaceholderScreen = ({ name }: { name: string }) => (
-  <View style={styles.center}>
-    <Text style={styles.text}>{name} Screen</Text>
-    <Text style={styles.subtext}>Shopping feature is currently out of scope for Phase 1</Text>
-  </View>
+const CartNavigator = () => (
+  <CartStack.Navigator screenOptions={{ headerShown: false }}>
+    <CartStack.Screen name="CartMain" component={CartScreen} />
+    <CartStack.Screen name="Checkout" component={CheckoutScreen} />
+  </CartStack.Navigator>
 );
 
-const ProfilePlaceholderScreen = () => {
-  const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [logoutMutation] = authApi.useLogoutMutation();
+const ProfileNavigator = () => (
+  <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+    <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} />
+    <ProfileStack.Screen name="OrdersList" component={OrdersScreen} />
+    <ProfileStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+  </ProfileStack.Navigator>
+);
 
-  const handleLogout = async () => {
-    try {
-      await logoutMutation().unwrap();
-    } catch (e) {
-      // Proceed even if api call fails
-    }
-    dispatch(clearCredentials());
-    await secureStore.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
-    await secureStore.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
-  };
-
+// Custom Premium Tab Bar Component
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   return (
-    <View style={styles.center}>
-      <Text style={styles.text}>Welcome, {user?.fullName || 'Customer'}</Text>
-      <Text style={styles.subtext}>{user?.email}</Text>
-      <Text style={styles.subtext}>Phone: {user?.phone}</Text>
-      <Button
-        mode="contained"
-        onPress={handleLogout}
-        style={styles.button}
-        buttonColor={COLORS.error}
-        textColor={COLORS.background}
-      >
-        Logout
-      </Button>
+    <View style={styles.tabBarWrapper}>
+      <View style={styles.tabBar}>
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+          const label =
+            options.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options.title !== undefined
+              ? options.title
+              : route.name;
+
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'help-circle';
+          if (route.name === ROUTES.MAIN.HOME) iconName = 'home';
+          else if (route.name === ROUTES.MAIN.CATEGORIES) iconName = 'view-grid';
+          else if (route.name === ROUTES.MAIN.CART) iconName = 'cart';
+          else if (route.name === ROUTES.MAIN.PROFILE) iconName = 'account';
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              style={styles.tabItem}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
+                <MaterialCommunityIcons
+                  name={iconName}
+                  size={22}
+                  color={isFocused ? COLORS.primary : COLORS.textSecondary}
+                />
+              </View>
+              <Text style={[styles.tabLabel, isFocused && styles.activeTabLabel]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Separate Aashiyana Logo Island on the Far Right */}
+      <View style={styles.logoIsland}>
+        <Image
+          source={require('../../assets/Aashiyana.jpg')}
+          style={styles.tabLogo}
+          resizeMode="cover"
+        />
+      </View>
     </View>
   );
 };
 
 export const TabNavigator = () => {
-  const dispatch = useDispatch();
-
-  React.useEffect(() => {
-    dispatch(initializeOfflineWishlist() as any);
-  }, [dispatch]);
-
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof MaterialCommunityIcons.glyphMap = 'help-circle';
-          if (route.name === ROUTES.MAIN.HOME) iconName = 'home';
-          else if (route.name === ROUTES.MAIN.CATEGORIES) iconName = 'view-grid';
-          else if (route.name === ROUTES.MAIN.WISHLIST) iconName = 'heart';
-          else if (route.name === ROUTES.MAIN.CART) iconName = 'cart';
-          else if (route.name === ROUTES.MAIN.ORDERS) iconName = 'clipboard-text';
-          else if (route.name === ROUTES.MAIN.PROFILE) iconName = 'account';
-
-          return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
-        tabBarStyle: {
-          backgroundColor: COLORS.secondary,
-        },
-        headerStyle: {
-          backgroundColor: COLORS.secondary,
-        },
-        headerTintColor: COLORS.background,
-      })}
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen
         name={ROUTES.MAIN.HOME}
         component={HomeNavigator}
-        options={{ title: 'Home', headerShown: false }}
+        options={{ title: 'Home' }}
       />
       <Tab.Screen
         name={ROUTES.MAIN.CATEGORIES}
@@ -116,19 +134,13 @@ export const TabNavigator = () => {
         options={{ title: 'Categories' }}
       />
       <Tab.Screen
-        name={ROUTES.MAIN.WISHLIST}
-        component={WishlistScreen}
-        options={{ title: 'Wishlist' }}
+        name={ROUTES.MAIN.CART}
+        component={CartNavigator}
+        options={{ title: 'Cart' }}
       />
-      <Tab.Screen name={ROUTES.MAIN.CART} options={{ title: 'Cart' }}>
-        {() => <PlaceholderScreen name="Cart" />}
-      </Tab.Screen>
-      <Tab.Screen name={ROUTES.MAIN.ORDERS} options={{ title: 'Orders' }}>
-        {() => <PlaceholderScreen name="Orders" />}
-      </Tab.Screen>
       <Tab.Screen
         name={ROUTES.MAIN.PROFILE}
-        component={ProfilePlaceholderScreen}
+        component={ProfileNavigator}
         options={{ title: 'Profile' }}
       />
     </Tab.Navigator>
@@ -136,27 +148,86 @@ export const TabNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  center: {
+  tabBarWrapper: {
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    paddingTop: 4,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tabBar: {
     flex: 1,
+    flexDirection: 'row',
+    backgroundColor: COLORS.background,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+    borderTopRightRadius: 30, // Rounded right end
+    borderBottomRightRadius: 30, // Rounded right end
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    paddingVertical: 3,
+    paddingHorizontal: 12,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.background,
-    padding: 24,
   },
-  text: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
+  activeIconContainer: {
+    backgroundColor: 'rgba(244, 196, 48, 0.12)', // Premium warm brand-colored glow highlight
   },
-  subtext: {
-    fontSize: 14,
+  tabLabel: {
+    fontSize: 9.5,
+    fontWeight: '600',
     color: COLORS.textSecondary,
-    marginTop: 8,
-    textAlign: 'center',
+    marginTop: 2,
   },
-  button: {
-    marginTop: 24,
-    borderRadius: 8,
-    width: '60%',
+  activeTabLabel: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  logoIsland: {
+    backgroundColor: COLORS.background,
+    width: 58,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 10,
+    borderTopLeftRadius: 23,
+    borderTopRightRadius: 23,
+    borderBottomLeftRadius: 23,
+    borderBottomRightRadius: 6, // Premium asymmetrical leaf island
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+  },
+  tabLogo: {
+    width: 52,
+    height: 52,
+    borderTopLeftRadius: 21,
+    borderTopRightRadius: 21,
+    borderBottomLeftRadius: 21,
+    borderBottomRightRadius: 5,
   },
 });
+
+export default TabNavigator;

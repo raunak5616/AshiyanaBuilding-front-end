@@ -15,6 +15,7 @@ interface ProductsListResponse {
 }
 
 export const productDetailsApi = apiSlice.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getProductDetailsFromDetails: builder.query<ProductDetailsResponse, string>({
       query: (id) => ({
