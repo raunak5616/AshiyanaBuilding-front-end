@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Ashiyana-frontend",
-    "slug": "Ashiyana-frontend",
+    "slug": "ashiyana-building",
     "version": "1.0.0",
     "jsEngine": "hermes",
     "orientation": "portrait",
@@ -27,6 +27,12 @@
       "expo-secure-store",
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7316116f-8aa6-48af-808f-692218a3971a"
+      }
+    },
+    "owner": "ashiyana-building"
   }
 }
