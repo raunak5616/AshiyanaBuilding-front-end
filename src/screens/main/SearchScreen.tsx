@@ -101,7 +101,7 @@ export const SearchScreen = ({ navigation }: any) => {
   }, [productsData, page]);
 
   const handleProductPress = (product: Product) => {
-    dispatch(addProductToRecentlyViewed(product));
+    navigation.navigate('ProductDetails', { productId: product.id });
     // Save keyword to search history when selection is made
     saveRecentSearch(debouncedSearch);
   };

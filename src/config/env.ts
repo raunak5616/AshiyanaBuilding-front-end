@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 // Set this to your local computer's IP address so physical devices on the same Wi-Fi and emulators can connect to the backend
-const DEV_HOST = '10.193.45.116';
+const DEV_HOST = '10.27.189.116';
 const DEV_PORT = 5000;
 
 export const ENV = {

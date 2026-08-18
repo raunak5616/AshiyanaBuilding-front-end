@@ -71,8 +71,7 @@ export const HomeScreen = ({ navigation }: any) => {
   };
 
   const handleProductPress = (product: Product) => {
-    dispatch(addProductToRecentlyViewed(product));
-    // In Phase 2, ProductDetails screen is out of scope. But adding to recently viewed works!
+    navigation.navigate('ProductDetails', { productId: product.id });
   };
 
   const handleCategoryPress = (category: Category) => {

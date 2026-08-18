@@ -103,7 +103,10 @@ export const CategoriesScreen = ({ route, navigation }: any) => {
   };
 
   const handleProductPress = (product: Product) => {
-    dispatch(addProductToRecentlyViewed(product));
+    navigation.navigate('HomeTab', {
+      screen: 'ProductDetails',
+      params: { productId: product.id },
+    });
   };
 
   if (categoriesError || (selectedCategory && productsError)) {

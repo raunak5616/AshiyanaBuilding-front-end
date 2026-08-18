@@ -17,6 +17,9 @@ import { authApi } from '../features/auth/authApi';
 import HomeScreen from '../screens/main/HomeScreen';
 import CategoriesScreen from '../screens/main/CategoriesScreen';
 import SearchScreen from '../screens/main/SearchScreen';
+import ProductDetailScreen from '../screens/main/ProductDetailScreen';
+import WishlistScreen from '../screens/main/WishlistScreen';
+import { initializeOfflineWishlist } from '../store/wishlistSlice';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -25,6 +28,7 @@ const HomeNavigator = () => (
   <HomeStack.Navigator screenOptions={{ headerShown: false }}>
     <HomeStack.Screen name="HomeMain" component={HomeScreen} />
     <HomeStack.Screen name="Search" component={SearchScreen} />
+    <HomeStack.Screen name="ProductDetails" component={ProductDetailScreen} />
   </HomeStack.Navigator>
 );
 
@@ -70,6 +74,12 @@ const ProfilePlaceholderScreen = () => {
 };
 
 export const TabNavigator = () => {
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    dispatch(initializeOfflineWishlist() as any);
+  }, [dispatch]);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -105,9 +115,11 @@ export const TabNavigator = () => {
         component={CategoriesScreen}
         options={{ title: 'Categories' }}
       />
-      <Tab.Screen name={ROUTES.MAIN.WISHLIST} options={{ title: 'Wishlist' }}>
-        {() => <PlaceholderScreen name="Wishlist" />}
-      </Tab.Screen>
+      <Tab.Screen
+        name={ROUTES.MAIN.WISHLIST}
+        component={WishlistScreen}
+        options={{ title: 'Wishlist' }}
+      />
       <Tab.Screen name={ROUTES.MAIN.CART} options={{ title: 'Cart' }}>
         {() => <PlaceholderScreen name="Cart" />}
       </Tab.Screen>
