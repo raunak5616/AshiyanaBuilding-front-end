@@ -217,13 +217,8 @@ const ProductSlideshow = ({ products, onProductPress }: { products: Product[]; o
         scrollEventThrottle={16}
         renderItem={({ item }) => {
           const imageUrl = item.images?.[0]?.url;
-          const getMockMrpAndDiscount = (name: string, price: number) => {
-            const code = (name || '').charCodeAt(0) || 1;
-            const discountPercent = 15 + (code % 36);
-            const mrp = Math.round(price / (1 - discountPercent / 100));
-            return { mrp, discountPercent };
-          };
-          const { mrp, discountPercent } = getMockMrpAndDiscount(item.name, item.sellingPrice);
+          const hasDiscount = item.mrp !== undefined && item.mrp !== null && item.mrp > item.sellingPrice;
+          const discountPercent = hasDiscount ? Math.round(((item.mrp! - item.sellingPrice) / item.mrp!) * 100) : 0;
 
           return (
             <TouchableOpacity
@@ -232,13 +227,15 @@ const ProductSlideshow = ({ products, onProductPress }: { products: Product[]; o
               onPress={() => onProductPress(item)}
             >
               <View style={styles.slideLeft}>
-                <View style={styles.slideBadge}>
-                  <Text style={styles.slideBadgeText}>{discountPercent}% OFF</Text>
-                </View>
+                {hasDiscount && (
+                  <View style={styles.slideBadge}>
+                    <Text style={styles.slideBadgeText}>{discountPercent}% OFF</Text>
+                  </View>
+                )}
                 <Text style={styles.slideName} numberOfLines={2}>{item.name}</Text>
                 <View style={styles.slidePriceRow}>
                   <Text style={styles.slidePrice}>₹{Math.round(item.sellingPrice / 100)}</Text>
-                  <Text style={styles.slideMrp}>M.R.P. ₹{Math.round(mrp / 100)}</Text>
+                  {hasDiscount && <Text style={styles.slideMrp}>M.R.P. ₹{Math.round(item.mrp! / 100)}</Text>}
                 </View>
                 <Text style={styles.slideBulkText}>Bulk prices available for contractors</Text>
               </View>
@@ -310,9 +307,9 @@ export const HomeScreen = ({ navigation: propNavigation }: any) => {
   const cartItems = cartData?.data?.items || [];
   const savedAddresses = addressData?.data || [];
 
-  // Slice categories fetched from DB to limit categories to 5 rows maximum (5 rows x 4 columns = 20 categories)
+  // Slice categories fetched from DB to limit categories to 4 rows maximum (4 rows x 4 columns = 16 categories)
   const dbCategories = categoriesData?.data || [];
-  const displayCategories = dbCategories.slice(0, 20);
+  const displayCategories = dbCategories.slice(0, 16);
 
   // Automatically pick default address or first saved address
   useEffect(() => {
@@ -489,7 +486,7 @@ export const HomeScreen = ({ navigation: propNavigation }: any) => {
           <View style={styles.categoryGrid}>
             {displayCategories.map((category) => {
               const mappedDetails = getCategoryStyles(category.name);
-              const numColumns = SCREEN_WIDTH > 600 ? 6 : 4;
+              const numColumns = 4;
               const cardWidth = `${Math.floor(100 / numColumns) - 3}%` as any;
               return (
                 <TouchableOpacity
@@ -499,11 +496,15 @@ export const HomeScreen = ({ navigation: propNavigation }: any) => {
                   onPress={() => handleCategoryPress(category)}
                 >
                   <View style={[styles.categoryIconBox, { backgroundColor: mappedDetails.bgColor }]}>
-                    <Image
-                      source={{ uri: category.image || mappedDetails.image }}
-                      style={styles.categoryImage}
-                      resizeMode="cover"
-                    />
+                    {category.image ? (
+                      <Image
+                        source={{ uri: category.image }}
+                        style={styles.categoryImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <MaterialCommunityIcons name="shape-outline" size={28} color={COLORS.textSecondary} />
+                    )}
                   </View>
                   <Text style={styles.categoryLabel} numberOfLines={2}>
                     {category.name}

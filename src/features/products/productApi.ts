@@ -17,6 +17,7 @@ export interface Product {
   unitId: string;
   description: string;
   sellingPrice: number; // in paise
+  mrp?: number; // in paise
   taxRate: number;
   images: ProductImage[];
   isActive: boolean;

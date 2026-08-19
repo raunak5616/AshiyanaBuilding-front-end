@@ -21,15 +21,8 @@ export const ProductCard = ({ product, badgeType, onPress }: ProductCardProps) =
   const imageUrl = product.images?.[0]?.url;
   const [addToCart, { isLoading }] = useAddToCartMutation();
 
-  // Deterministic mock MRP and discount based on product name
-  const getMockMrpAndDiscount = (name: string, sellingPrice: number) => {
-    const code = (name || '').charCodeAt(0) || 1;
-    const discountPercent = 15 + (code % 36); // Deterministic discount between 15% and 50%
-    const mrp = Math.round(sellingPrice / (1 - discountPercent / 100));
-    return { mrp, discountPercent };
-  };
-
-  const { mrp, discountPercent } = getMockMrpAndDiscount(product.name, product.sellingPrice);
+  const hasDiscount = product.mrp !== undefined && product.mrp !== null && product.mrp > product.sellingPrice;
+  const discountPercent = hasDiscount ? Math.round(((product.mrp! - product.sellingPrice) / product.mrp!) * 100) : 0;
 
   const handleAddToCart = async (e: any) => {
     e.stopPropagation();
@@ -56,9 +49,11 @@ export const ProductCard = ({ product, badgeType, onPress }: ProductCardProps) =
         )}
         
         {/* Discount Badge */}
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>{discountPercent}% Off</Text>
-        </View>
+        {hasDiscount && (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>{discountPercent}% Off</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -72,7 +67,7 @@ export const ProductCard = ({ product, badgeType, onPress }: ProductCardProps) =
           
           <View style={styles.priceRow}>
             <ProductPrice priceInPaise={product.sellingPrice} style={styles.price} />
-            <Text style={styles.mrpText}>₹{Math.round(mrp / 100)}</Text>
+            {hasDiscount && <Text style={styles.mrpText}>₹{Math.round(product.mrp! / 100)}</Text>}
           </View>
           
           <Text style={styles.bulkText}>Bulk Prices Available</Text>

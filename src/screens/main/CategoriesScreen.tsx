@@ -323,7 +323,11 @@ export const CategoriesScreen = ({ route, navigation }: any) => {
                   >
                     {isActive && <View style={styles.activeIndicator} />}
                     <View style={[styles.sidebarIconBox, { backgroundColor: mappedStyles.bgColor }]}>
-                      <Image source={{ uri: category.image || mappedStyles.image }} style={styles.sidebarIcon} />
+                      {category.image ? (
+                        <Image source={{ uri: category.image }} style={styles.sidebarIcon} />
+                      ) : (
+                        <MaterialCommunityIcons name="shape-outline" size={20} color={COLORS.textSecondary} />
+                      )}
                     </View>
                     <Text style={[styles.sidebarText, isActive && styles.sidebarTextActive]} numberOfLines={2}>
                       {category.name}
