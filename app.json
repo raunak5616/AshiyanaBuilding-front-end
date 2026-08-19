@@ -27,6 +27,12 @@
         "projectId": "7316116f-8aa6-48af-808f-692218a3971a"
       }
     },
-    "owner": "ashiyana-building"
+    "owner": "ashiyana-building",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7316116f-8aa6-48af-808f-692218a3971a"
+    }
   }
 }

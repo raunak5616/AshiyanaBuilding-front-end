@@ -201,6 +201,17 @@ export const CategoriesScreen = ({ route, navigation }: any) => {
     }
   }, [productsData, page]);
 
+  // Refetch data when screen comes into focus to reflect updates from admin immediately
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetchCategories();
+      if (refetchProducts) {
+        refetchProducts();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, refetchCategories, refetchProducts]);
+
   const handleRefresh = () => {
     if (selectedCategory) {
       setPage(1);

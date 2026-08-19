@@ -46,6 +46,14 @@ export const ProductDetailScreen = ({ route, navigation }: any) => {
     }
   }, [product, dispatch]);
 
+  // Refetch product details when screen comes into focus to reflect updates from admin immediately
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetch();
+    });
+    return unsubscribe;
+  }, [navigation, refetch]);
+
   const handleRefresh = () => {
     refetch();
   };

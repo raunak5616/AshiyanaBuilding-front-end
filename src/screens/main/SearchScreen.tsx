@@ -132,6 +132,16 @@ export const SearchScreen = ({ navigation }: any) => {
     }
   }, [productsData, page]);
 
+  // Refetch search results when screen comes into focus to reflect updates from admin immediately
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (debouncedSearch.trim() && refetchProducts) {
+        refetchProducts();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, debouncedSearch, refetchProducts]);
+
   const handleProductPress = (product: Product) => {
     navigation.navigate('ProductDetails', { productId: product.id });
     // Save keyword to search history when selection is made

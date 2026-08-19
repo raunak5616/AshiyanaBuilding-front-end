@@ -322,6 +322,16 @@ export const HomeScreen = ({ navigation: propNavigation }: any) => {
     }
   }, [savedAddresses, selectedAddress]);
 
+  // Refetch data when screen comes into focus to reflect updates from admin immediately
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetchCategories();
+      refetchFeatured();
+      refetchSlides();
+    });
+    return unsubscribe;
+  }, [navigation, refetchCategories, refetchFeatured, refetchSlides]);
+
   const handleRefresh = () => {
     refetchCategories();
     refetchFeatured();
