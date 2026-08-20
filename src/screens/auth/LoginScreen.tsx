@@ -53,11 +53,6 @@ export const LoginScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleQuickDemo = () => {
-    setValue('emailOrPhone', 'customer@example.com');
-    setValue('password', 'Password123');
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
@@ -108,24 +103,6 @@ export const LoginScreen = ({ navigation }: any) => {
           onPress={() => navigation.navigate(ROUTES.AUTH.SIGNUP)}
           style={styles.signupBtn}
         />
-
-        {/* Quick Demo Accounts Panel */}
-        <Card style={styles.demoCard}>
-          <Card.Content style={styles.demoContent}>
-            <Text style={styles.demoTitle}>Quick Demo Login</Text>
-            <Text style={styles.demoDesc}>
-              Quickly fill the fields with the seeded demo customer account to test login.
-            </Text>
-            <Button
-              mode="outlined"
-              onPress={handleQuickDemo}
-              textColor={COLORS.secondary}
-              style={[styles.demoBtn, { borderColor: COLORS.primary }]}
-            >
-              Pre-fill customer@example.com
-            </Button>
-          </Card.Content>
-        </Card>
 
         <LoadingOverlay visible={isLoading} />
       </View>
@@ -179,31 +156,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: SPACING.lg,
   },
-  demoCard: {
-    width: '100%',
-    backgroundColor: '#FFFBEB', // Light amber background for demo box
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#FEF3C7',
-  },
-  demoContent: {
-    alignItems: 'center',
-  },
-  demoTitle: {
-    ...TYPOGRAPHY.title,
-    fontSize: 16,
-    color: COLORS.warning,
-    fontWeight: 'bold',
-    marginBottom: SPACING.xs,
-  },
-  demoDesc: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.textSecondary,
-    textAlign: 'center',
-    marginBottom: SPACING.sm,
-  },
-  demoBtn: {
-    borderRadius: RADIUS.sm,
-  },
+
 });
 export default LoginScreen;
