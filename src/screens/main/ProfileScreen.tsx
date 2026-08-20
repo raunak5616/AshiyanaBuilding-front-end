@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { clearCredentials, setCredentials } from '../../store/authSlice';
 import { useLogoutMutation, useGetProfileQuery } from '../../features/auth/authApi';
+import { apiSlice } from '../../api/apiSlice';
 import {
   useUpdateProfileMutation,
   useListAddressesQuery,
@@ -367,6 +368,7 @@ export const ProfileScreen = ({ navigation }: any) => {
             // Proceed anyway
           }
           dispatch(clearCredentials());
+          dispatch(apiSlice.util.resetApiState());
           await secureStore.deleteItem(STORAGE_KEYS.ACCESS_TOKEN);
           await secureStore.deleteItem(STORAGE_KEYS.REFRESH_TOKEN);
         },
